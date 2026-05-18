@@ -475,6 +475,38 @@ impl<'f, 'sess: 'f> AcceptContext<'f, 'sess> {
         Some(single)
     }
 
+    pub(crate) fn expect_mapped_symbol<T: Copy, const N: usize>(
+        &mut self,
+        arg: Symbol,
+        span: Span,
+        mapping: [(Symbol, T); N],
+    ) -> Option<T> {
+        for &(symbol, result) in &mapping {
+            if symbol == arg {
+                return Some(result);
+            }
+        }
+
+        self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
+
+        None
+    }
+
+    pub(crate) fn expect_single_mapped_symbol_in_list<'arg, T: Copy, const N: usize>(
+        &mut self,
+        arg: &'arg ArgParser,
+        span: Span,
+        mapping: [(Symbol, T); N],
+    ) -> Option<T> {
+        let single = self.expect_single_element_list(arg, span)?;
+        let Some(symbol) = single.meta_item().and_then(|i| i.path().word_sym()) else {
+            self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
+            return None;
+        };
+
+        self.expect_mapped_symbol(symbol, single.span(), mapping)
+    }
+
     /// Asserts that an [`ArgParser`] is a list and returns it, or emits an error and returns
     /// `None`.
     ///

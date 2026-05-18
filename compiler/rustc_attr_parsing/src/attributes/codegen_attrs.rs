@@ -24,19 +24,17 @@ impl SingleAttributeParser for OptimizeParser {
     const TEMPLATE: AttributeTemplate = template!(List: &["size", "speed", "none"]);
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
-        let single = cx.expect_single_element_list(args, cx.attr_span)?;
-
-        let res = match single.meta_item().and_then(|i| i.path().word().map(|i| i.name)) {
-            Some(sym::size) => OptimizeAttr::Size,
-            Some(sym::speed) => OptimizeAttr::Speed,
-            Some(sym::none) => OptimizeAttr::DoNotOptimize,
-            _ => {
-                cx.adcx()
-                    .expected_specific_argument(single.span(), &[sym::size, sym::speed, sym::none]);
-                OptimizeAttr::Default
-            }
-        };
-
+        let res = cx
+            .expect_single_mapped_symbol_in_list(
+                args,
+                cx.attr_span,
+                [
+                    (sym::size, OptimizeAttr::Size),
+                    (sym::speed, OptimizeAttr::Speed),
+                    (sym::none, OptimizeAttr::DoNotOptimize),
+                ],
+            )
+            .unwrap_or(OptimizeAttr::Default);
         Some(AttributeKind::Optimize(res, cx.attr_span))
     }
 }
@@ -75,25 +73,11 @@ impl SingleAttributeParser for CoverageParser {
     const TEMPLATE: AttributeTemplate = template!(OneOf: &[sym::off, sym::on]);
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
-        let arg = cx.expect_single_element_list(args, cx.attr_span)?;
-
-        let mut fail_incorrect_argument =
-            |span| cx.adcx().expected_specific_argument(span, &[sym::on, sym::off]);
-
-        let Some(arg) = arg.meta_item() else {
-            fail_incorrect_argument(arg.span());
-            return None;
-        };
-
-        let kind = match arg.path().word_sym() {
-            Some(sym::off) => CoverageAttrKind::Off,
-            Some(sym::on) => CoverageAttrKind::On,
-            None | Some(_) => {
-                fail_incorrect_argument(arg.span());
-                return None;
-            }
-        };
-
+        let kind = cx.expect_single_mapped_symbol_in_list(
+            args,
+            cx.attr_span,
+            [(sym::off, CoverageAttrKind::Off), (sym::on, CoverageAttrKind::On)],
+        )?;
         Some(AttributeKind::Coverage(kind))
     }
 }

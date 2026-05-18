@@ -642,35 +642,21 @@ impl SingleAttributeParser for LinkageParser {
         //
         // ghost, dllimport, dllexport and linkonce_odr_autohide are not supported
         // and don't have to be, LLVM treats them as no-ops.
-        let linkage = match value {
-            sym::available_externally => Linkage::AvailableExternally,
-            sym::common => Linkage::Common,
-            sym::extern_weak => Linkage::ExternalWeak,
-            sym::external => Linkage::External,
-            sym::internal => Linkage::Internal,
-            sym::linkonce => Linkage::LinkOnceAny,
-            sym::linkonce_odr => Linkage::LinkOnceODR,
-            sym::weak => Linkage::WeakAny,
-            sym::weak_odr => Linkage::WeakODR,
-
-            _ => {
-                cx.adcx().expected_specific_argument(
-                    name_value.value_span,
-                    &[
-                        sym::available_externally,
-                        sym::common,
-                        sym::extern_weak,
-                        sym::external,
-                        sym::internal,
-                        sym::linkonce,
-                        sym::linkonce_odr,
-                        sym::weak,
-                        sym::weak_odr,
-                    ],
-                );
-                return None;
-            }
-        };
+        let linkage = cx.expect_mapped_symbol(
+            value,
+            name_value.value_span,
+            [
+                (sym::available_externally, Linkage::AvailableExternally),
+                (sym::common, Linkage::Common),
+                (sym::extern_weak, Linkage::ExternalWeak),
+                (sym::external, Linkage::External),
+                (sym::internal, Linkage::Internal),
+                (sym::linkonce, Linkage::LinkOnceAny),
+                (sym::linkonce_odr, Linkage::LinkOnceODR),
+                (sym::weak, Linkage::WeakAny),
+                (sym::weak_odr, Linkage::WeakODR),
+            ],
+        )?;
 
         Some(AttributeKind::Linkage(linkage, cx.attr_span))
     }

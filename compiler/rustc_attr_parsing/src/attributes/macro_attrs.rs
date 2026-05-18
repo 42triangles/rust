@@ -180,17 +180,16 @@ impl SingleAttributeParser for CollapseDebugInfoParser {
         };
         let _ = cx.expect_no_args(mi.args());
         let path = mi.path().word_sym();
-        let info = match path {
-            Some(sym::yes) => CollapseMacroDebuginfo::Yes,
-            Some(sym::no) => CollapseMacroDebuginfo::No,
-            Some(sym::external) => CollapseMacroDebuginfo::External,
-            _ => {
-                cx.adcx()
-                    .expected_specific_argument(mi.span(), &[sym::yes, sym::no, sym::external]);
-                return None;
-            }
-        };
 
+        let info = cx.expect_mapped_symbol(
+            path?,
+            mi.span(),
+            [
+                (sym::yes, CollapseMacroDebuginfo::Yes),
+                (sym::no, CollapseMacroDebuginfo::No),
+                (sym::external, CollapseMacroDebuginfo::External),
+            ],
+        )?;
         Some(AttributeKind::CollapseDebugInfo(info))
     }
 }

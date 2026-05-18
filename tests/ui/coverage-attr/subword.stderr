@@ -4,7 +4,7 @@ error[E0539]: malformed `coverage` attribute input
 LL | #[coverage(yes(milord))]
    | ^^^^^^^^^^^-----------^^
    |            |
-   |            valid arguments are `on` or `off`
+   |            valid arguments are `off` or `on`
    |
 help: try changing it to one of the following valid forms of the attribute
    |
@@ -21,7 +21,7 @@ error[E0539]: malformed `coverage` attribute input
 LL | #[coverage(no(milord))]
    | ^^^^^^^^^^^----------^^
    |            |
-   |            valid arguments are `on` or `off`
+   |            valid arguments are `off` or `on`
    |
 help: try changing it to one of the following valid forms of the attribute
    |
@@ -38,7 +38,7 @@ error[E0539]: malformed `coverage` attribute input
 LL | #[coverage(yes = "milord")]
    | ^^^^^^^^^^^--------------^^
    |            |
-   |            valid arguments are `on` or `off`
+   |            valid arguments are `off` or `on`
    |
 help: try changing it to one of the following valid forms of the attribute
    |
@@ -55,7 +55,7 @@ error[E0539]: malformed `coverage` attribute input
 LL | #[coverage(no = "milord")]
    | ^^^^^^^^^^^-------------^^
    |            |
-   |            valid arguments are `on` or `off`
+   |            valid arguments are `off` or `on`
    |
 help: try changing it to one of the following valid forms of the attribute
    |

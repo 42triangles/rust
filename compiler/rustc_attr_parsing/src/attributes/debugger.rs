@@ -22,17 +22,14 @@ impl CombineAttributeParser for DebuggerViualizerParser {
     ) -> impl IntoIterator<Item = Self::Item> {
         let single = cx.expect_single_element_list(args, cx.attr_span)?;
         let (ident, args) = cx.expect_name_value(single, single.span(), None)?;
-        let visualizer_type = match ident.name {
-            sym::natvis_file => DebuggerVisualizerType::Natvis,
-            sym::gdb_script_file => DebuggerVisualizerType::GdbPrettyPrinter,
-            _ => {
-                cx.adcx().expected_specific_argument(
-                    ident.span,
-                    &[sym::natvis_file, sym::gdb_script_file],
-                );
-                return None;
-            }
-        };
+        let visualizer_type = cx.expect_mapped_symbol(
+            ident.name,
+            ident.span,
+            [
+                (sym::natvis_file, DebuggerVisualizerType::Natvis),
+                (sym::gdb_script_file, DebuggerVisualizerType::GdbPrettyPrinter),
+            ],
+        )?;
 
         let path = cx.expect_string_literal(args)?;
 
