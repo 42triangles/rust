@@ -326,6 +326,7 @@ impl DocParser {
                         );
                         continue;
                     };
+                    // TODO
                     let (kind, attr_name) = match item.path().word_sym() {
                         Some(sym::hide) => (HideOrShow::Hide, sym::hide),
                         Some(sym::show) => (HideOrShow::Show, sym::show),

@@ -48,6 +48,7 @@ impl SingleAttributeParser for InstructionSetParser {
                     });
                     return None;
                 }
+                // TODO
                 match instruction_set.name {
                     sym::a32 => InstructionSetAttr::ArmA32,
                     sym::t32 => InstructionSetAttr::ArmT32,

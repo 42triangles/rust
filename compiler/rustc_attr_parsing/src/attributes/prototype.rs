@@ -34,6 +34,7 @@ impl SingleAttributeParser for CustomMirParser {
                 break;
             };
 
+            // TODO
             match path.name {
                 sym::dialect => {
                     extract_value(cx, sym::dialect, arg, item.span(), &mut dialect, &mut failed)
@@ -89,6 +90,7 @@ fn parse_dialect(
 ) -> Option<(MirDialect, Span)> {
     let (dialect, span) = dialect?;
 
+    // TODO
     let dialect = match dialect {
         sym::analysis => MirDialect::Analysis,
         sym::built => MirDialect::Built,
@@ -111,6 +113,7 @@ fn parse_phase(
 ) -> Option<(MirPhase, Span)> {
     let (phase, span) = phase?;
 
+    // TODO
     let phase = match phase {
         sym::initial => MirPhase::Initial,
         sym::post_cleanup => MirPhase::PostCleanup,

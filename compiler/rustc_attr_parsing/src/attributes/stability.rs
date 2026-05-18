@@ -317,6 +317,7 @@ pub(crate) fn parse_stability(
         };
 
         let word = param.path().word();
+        // TODO
         match word.map(|i| i.name) {
             Some(sym::feature) => {
                 insert_value_into_option_or_error(cx, &param, &mut feature, word.unwrap())?
@@ -384,6 +385,7 @@ pub(crate) fn parse_unstability(
         };
 
         let word = param.path().word();
+        // TODO; special case `sym::issue` as a cleanup thing after
         match word.map(|i| i.name) {
             Some(sym::feature) => {
                 insert_value_into_option_or_error(cx, &param, &mut feature, word.unwrap())?
@@ -506,6 +508,7 @@ impl CombineAttributeParser for UnstableRemovedParser {
                 );
                 return None;
             };
+            // TODO
             match word.name {
                 sym::feature => insert_value_into_option_or_error(cx, &param, &mut feature, word)?,
                 sym::since => insert_value_into_option_or_error(cx, &param, &mut since, word)?,

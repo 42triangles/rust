@@ -106,6 +106,7 @@ impl CombineAttributeParser for RustcDumpLayoutParser {
                 cx.adcx().expected_identifier(arg.span());
                 return vec![];
             };
+            // TODO
             let kind = match ident.name {
                 sym::align => RustcDumpLayoutKind::Align,
                 sym::backend_repr => RustcDumpLayoutKind::BackendRepr,

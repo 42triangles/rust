@@ -182,6 +182,7 @@ fn parse_cgu_fields(
             continue;
         };
 
+        // TODO
         let res = match ident.name {
             sym::cfg => &mut cfg,
             sym::module => &mut module,
@@ -218,6 +219,7 @@ fn parse_cgu_fields(
         return None;
     };
     let kind = if let Some((kind, span)) = kind {
+        // TODO
         Some(match kind {
             sym::no => CguKind::No,
             sym::pre_dash_lto => CguKind::PreDashLto,
@@ -365,6 +367,7 @@ impl SingleAttributeParser for RustcNeverTypeOptionsParser {
                 continue;
             };
 
+            // TODO
             let res = match ident.name {
                 sym::fallback => &mut fallback,
                 sym::diverging_block_default => &mut diverging_block_default,
@@ -387,6 +390,7 @@ impl SingleAttributeParser for RustcNeverTypeOptionsParser {
             *res = Some(Ident { name: field, span: arg.value_span });
         }
 
+        // TODO
         let fallback = match fallback {
             None => None,
             Some(Ident { name: sym::unit, .. }) => Some(DivergingFallbackBehavior::ToUnit),
@@ -399,6 +403,7 @@ impl SingleAttributeParser for RustcNeverTypeOptionsParser {
             }
         };
 
+        // TODO
         let diverging_block_default = match diverging_block_default {
             None => None,
             Some(Ident { name: sym::unit, .. }) => Some(DivergingBlockBehavior::Unit),
@@ -651,6 +656,7 @@ impl CombineAttributeParser for RustcMirParser {
                                 cx.adcx().expected_identifier(nv.value_span);
                                 return None;
                             };
+                            // TODO
                             match format.name {
                                 sym::two_phase => Some(RustcMirKind::BorrowckGraphvizFormat {
                                     format: BorrowckGraphvizFormatKind::TwoPhase,

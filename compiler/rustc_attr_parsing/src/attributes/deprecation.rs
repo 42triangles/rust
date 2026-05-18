@@ -84,6 +84,7 @@ impl SingleAttributeParser for DeprecatedParser {
 
                     let ident_name = param.path().word_sym();
 
+                    // NOTE: Special case `suggestion` branch as cleanup
                     match ident_name {
                         Some(name @ sym::since) => {
                             since = Some(get(cx, name, param.span(), param.args(), since)?.name);

@@ -481,15 +481,29 @@ impl<'f, 'sess: 'f> AcceptContext<'f, 'sess> {
         span: Span,
         mapping: [(Symbol, T); N],
     ) -> Option<T> {
-        for &(symbol, result) in &mapping {
-            if symbol == arg {
-                return Some(result);
+        match mapping.iter().find(|&&(symbol, _)| symbol == arg) {
+            Some(&(_, result)) => Some(result),
+            None => {
+                self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
+                None
             }
         }
+    }
 
-        self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
-
-        None
+    pub(crate) fn expect_mapped_symbol_strings<T: Copy, const N: usize>(
+        &mut self,
+        arg: Symbol,
+        span: Span,
+        mapping: [(Symbol, T); N],
+    ) -> Option<T> {
+        match mapping.iter().find(|&&(symbol, _)| symbol == arg) {
+            Some(&(_, result)) => Some(result),
+            None => {
+                self.adcx()
+                    .expected_specific_argument_strings(span, &mapping.map(|(symbol, _)| symbol));
+                None
+            }
+        }
     }
 
     pub(crate) fn expect_single_mapped_symbol_in_list<'arg, T: Copy, const N: usize>(

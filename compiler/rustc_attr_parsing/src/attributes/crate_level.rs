@@ -170,6 +170,7 @@ impl SingleAttributeParser for WindowsSubsystemParser {
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
         let nv = cx.expect_name_value(args, cx.inner_span, Some(sym::windows_subsystem))?;
 
+        // TODO
         let kind = match nv.value_as_str() {
             Some(sym::console) => WindowsSubsystemKind::Console,
             Some(sym::windows) => WindowsSubsystemKind::Windows,

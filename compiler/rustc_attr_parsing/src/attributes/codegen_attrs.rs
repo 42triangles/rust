@@ -357,6 +357,7 @@ impl AttributeParser for UsedParser {
                         return;
                     };
 
+                    // TODO; both `UsedBy::*` and the error message
                     match l.meta_item().and_then(|i| i.path().word_sym()) {
                         Some(sym::compiler) => {
                             if !cx.features().used_with_arg() {
@@ -569,6 +570,7 @@ impl SingleAttributeParser for SanitizeParser {
             };
 
             let mut apply = |s: SanitizerSet| {
+                // TODO
                 let is_on = match value.value_as_str() {
                     Some(sym::on) => true,
                     Some(sym::off) => false,
@@ -595,6 +597,7 @@ impl SingleAttributeParser for SanitizeParser {
                 }
             };
 
+            // TODO: Special-case `realtime` outside
             match ident.name {
                 sym::address | sym::kernel_address => {
                     apply(SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS)
@@ -608,6 +611,7 @@ impl SingleAttributeParser for SanitizeParser {
                 sym::hwaddress | sym::kernel_hwaddress => {
                     apply(SanitizerSet::HWADDRESS | SanitizerSet::KERNELHWADDRESS)
                 }
+                // TODO
                 sym::realtime => match value.value_as_str() {
                     Some(sym::nonblocking) => rtsan = Some(RtsanSetting::Nonblocking),
                     Some(sym::blocking) => rtsan = Some(RtsanSetting::Blocking),
@@ -696,6 +700,7 @@ impl SingleAttributeParser for PatchableFunctionEntryParser {
                 continue;
             };
 
+            // TODO
             let attrib_to_write = match ident.name {
                 sym::prefix_nops => {
                     // Duplicate prefixes are not allowed

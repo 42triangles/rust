@@ -128,6 +128,7 @@ impl SingleAttributeParser for RustcAbiParser {
             return None;
         };
 
+        // TODO
         let kind: RustcAbiAttrKind = match arg.path().word_sym() {
             Some(sym::assert_eq) => RustcAbiAttrKind::AssertEq,
             Some(sym::debug) => RustcAbiAttrKind::Debug,

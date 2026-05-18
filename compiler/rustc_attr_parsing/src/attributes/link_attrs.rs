@@ -106,6 +106,7 @@ impl CombineAttributeParser for LinkParser {
                 continue;
             };
 
+            // TODO
             let cont = match item.path().word().map(|ident| ident.name) {
                 Some(sym::name) => Self::parse_link_name(item, &mut name, cx),
                 Some(sym::kind) => Self::parse_link_kind(item, &mut kind, cx, sess, features),
@@ -441,6 +442,7 @@ impl LinkParser {
             return true;
         }
 
+        // TODO
         let link_import_name_type = match link_import_name_type {
             sym::decorated => PeImportNameType::Decorated,
             sym::noprefix => PeImportNameType::NoPrefix,

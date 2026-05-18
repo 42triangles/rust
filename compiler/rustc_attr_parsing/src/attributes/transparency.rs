@@ -15,6 +15,7 @@ impl SingleAttributeParser for RustcMacroTransparencyParser {
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
         let nv = cx.expect_name_value(args, cx.attr_span, None)?;
+        // TODO
         match nv.value_as_str() {
             Some(sym::transparent) => Some(Transparency::Transparent),
             Some(sym::semiopaque) => Some(Transparency::SemiOpaque),
