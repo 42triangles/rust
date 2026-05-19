@@ -357,40 +357,33 @@ impl AttributeParser for UsedParser {
                         return;
                     };
 
-                    // TODO; both `UsedBy::*` and the error message
-                    match l.meta_item().and_then(|i| i.path().word_sym()) {
-                        Some(sym::compiler) => {
-                            if !cx.features().used_with_arg() {
-                                feature_err(
-                                    &cx.sess(),
-                                    sym::used_with_arg,
-                                    cx.attr_span,
-                                    "`#[used(compiler)]` is currently unstable",
-                                )
-                                .emit();
-                            }
-                            UsedBy::Compiler
-                        }
-                        Some(sym::linker) => {
-                            if !cx.features().used_with_arg() {
-                                feature_err(
-                                    &cx.sess(),
-                                    sym::used_with_arg,
-                                    cx.attr_span,
-                                    "`#[used(linker)]` is currently unstable",
-                                )
-                                .emit();
-                            }
-                            UsedBy::Linker
-                        }
-                        _ => {
-                            cx.adcx().expected_specific_argument(
-                                l.span(),
-                                &[sym::compiler, sym::linker],
-                            );
-                            return;
-                        }
+                    let maybe_symbol = l.meta_item().and_then(|i| i.path().word_sym());
+                    let Some((used_by, unstable_msg)) = cx.expect_mapped_symbol(
+                        maybe_symbol,
+                        l.span(),
+                        [
+                            (
+                                sym::compiler,
+                                (UsedBy::Compiler, "`#[used(compiler)]` is currently unstable"),
+                            ),
+                            (
+                                sym::linker,
+                                (UsedBy::Linker, "`#[used(linker)]` is currently unstable"),
+                            ),
+                        ],
+                    ) else {
+                        return;
+                    };
+                    if !cx.features().used_with_arg() {
+                        feature_err(
+                            &cx.sess(),
+                            maybe_symbol.expect("something must have matched"),
+                            cx.attr_span,
+                            unstable_msg,
+                        )
+                        .emit();
                     }
+                    used_by
                 }
                 ArgParser::NameValue(_) => return,
             };
@@ -569,78 +562,53 @@ impl SingleAttributeParser for SanitizeParser {
                 continue;
             };
 
-            let mut apply = |s: SanitizerSet| {
-                // TODO
-                let is_on = match value.value_as_str() {
-                    Some(sym::on) => true,
-                    Some(sym::off) => false,
-                    Some(_) => {
-                        cx.adcx().expected_specific_argument_strings(
-                            value.value_span,
-                            &[sym::on, sym::off],
-                        );
-                        return;
-                    }
-                    None => {
-                        cx.adcx().expected_specific_argument_strings(
-                            value.value_span,
-                            &[sym::on, sym::off],
-                        );
-                        return;
-                    }
+            if ident.name == sym::realtime {
+                // Returns `None` in the error case
+                rtsan = cx.expect_mapped_symbol_strings(
+                    value.value_as_str(),
+                    value.value_span,
+                    [
+                        (sym::nonblocking, RtsanSetting::Nonblocking),
+                        (sym::blocking, RtsanSetting::Blocking),
+                        (sym::caller, RtsanSetting::Caller),
+                    ],
+                );
+            } else {
+                let Some(sanitizer) = cx.expect_mapped_symbol_strings(
+                    Some(ident.name),
+                    ident.span,
+                    [
+                        (sym::address, SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS),
+                        (sym::kernel_address, SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS),
+                        (sym::cfi, SanitizerSet::CFI),
+                        (sym::kcfi, SanitizerSet::KCFI),
+                        (sym::memory, SanitizerSet::MEMORY),
+                        (sym::memtag, SanitizerSet::MEMTAG),
+                        (sym::shadow_call_stack, SanitizerSet::SHADOWCALLSTACK),
+                        (sym::thread, SanitizerSet::THREAD),
+                        (sym::hwaddress, SanitizerSet::HWADDRESS | SanitizerSet::KERNELHWADDRESS),
+                        (
+                            sym::kernel_hwaddress,
+                            SanitizerSet::HWADDRESS | SanitizerSet::KERNELHWADDRESS,
+                        ),
+                        (sym::realtime, SanitizerSet::empty()), // handled above
+                    ],
+                ) else {
+                    continue;
+                };
+
+                let Some(is_on) = cx.expect_mapped_symbol_strings(
+                    value.value_as_str(),
+                    value.value_span,
+                    [(sym::on, true), (sym::off, false)],
+                ) else {
+                    continue;
                 };
 
                 if is_on {
-                    on_set |= s;
+                    on_set |= sanitizer;
                 } else {
-                    off_set |= s;
-                }
-            };
-
-            // TODO: Special-case `realtime` outside
-            match ident.name {
-                sym::address | sym::kernel_address => {
-                    apply(SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS)
-                }
-                sym::cfi => apply(SanitizerSet::CFI),
-                sym::kcfi => apply(SanitizerSet::KCFI),
-                sym::memory => apply(SanitizerSet::MEMORY),
-                sym::memtag => apply(SanitizerSet::MEMTAG),
-                sym::shadow_call_stack => apply(SanitizerSet::SHADOWCALLSTACK),
-                sym::thread => apply(SanitizerSet::THREAD),
-                sym::hwaddress | sym::kernel_hwaddress => {
-                    apply(SanitizerSet::HWADDRESS | SanitizerSet::KERNELHWADDRESS)
-                }
-                // TODO
-                sym::realtime => match value.value_as_str() {
-                    Some(sym::nonblocking) => rtsan = Some(RtsanSetting::Nonblocking),
-                    Some(sym::blocking) => rtsan = Some(RtsanSetting::Blocking),
-                    Some(sym::caller) => rtsan = Some(RtsanSetting::Caller),
-                    _ => {
-                        cx.adcx().expected_specific_argument_strings(
-                            value.value_span,
-                            &[sym::nonblocking, sym::blocking, sym::caller],
-                        );
-                    }
-                },
-                _ => {
-                    cx.adcx().expected_specific_argument_strings(
-                        ident.span,
-                        &[
-                            sym::address,
-                            sym::kernel_address,
-                            sym::cfi,
-                            sym::kcfi,
-                            sym::memory,
-                            sym::memtag,
-                            sym::shadow_call_stack,
-                            sym::thread,
-                            sym::hwaddress,
-                            sym::kernel_hwaddress,
-                            sym::realtime,
-                        ],
-                    );
-                    continue;
+                    off_set |= sanitizer;
                 }
             }
         }
@@ -700,35 +668,21 @@ impl SingleAttributeParser for PatchableFunctionEntryParser {
                 continue;
             };
 
-            // TODO
-            let attrib_to_write = match ident.name {
-                sym::prefix_nops => {
-                    // Duplicate prefixes are not allowed
-                    if prefix.is_some() {
-                        errored = true;
-                        cx.adcx().duplicate_key(ident.span, sym::prefix_nops);
-                        continue;
-                    }
-                    &mut prefix
-                }
-                sym::entry_nops => {
-                    // Duplicate entries are not allowed
-                    if entry.is_some() {
-                        errored = true;
-                        cx.adcx().duplicate_key(ident.span, sym::entry_nops);
-                        continue;
-                    }
-                    &mut entry
-                }
-                _ => {
-                    errored = true;
-                    cx.adcx().expected_specific_argument(
-                        ident.span,
-                        &[sym::prefix_nops, sym::entry_nops],
-                    );
-                    continue;
-                }
+            let Some(attrib_to_write) = cx.expect_mapped_symbol(
+                Some(ident.name),
+                ident.span,
+                [(sym::prefix_nops, &mut prefix), (sym::entry_nops, &mut entry)],
+            ) else {
+                errored = true;
+                continue;
             };
+
+            // Duplicate prefixes are not allowed
+            if attrib_to_write.is_some() {
+                errored = true;
+                cx.adcx().duplicate_key(ident.span, ident.name);
+                continue;
+            }
 
             let rustc_ast::LitKind::Int(val, _) = value.value_as_lit().kind else {
                 errored = true;

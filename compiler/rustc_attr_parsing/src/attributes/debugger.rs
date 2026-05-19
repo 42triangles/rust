@@ -23,7 +23,7 @@ impl CombineAttributeParser for DebuggerViualizerParser {
         let single = cx.expect_single_element_list(args, cx.attr_span)?;
         let (ident, args) = cx.expect_name_value(single, single.span(), None)?;
         let visualizer_type = cx.expect_mapped_symbol(
-            ident.name,
+            Some(ident.name),
             ident.span,
             [
                 (sym::natvis_file, DebuggerVisualizerType::Natvis),

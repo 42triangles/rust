@@ -645,7 +645,7 @@ impl SingleAttributeParser for LinkageParser {
         // ghost, dllimport, dllexport and linkonce_odr_autohide are not supported
         // and don't have to be, LLVM treats them as no-ops.
         let linkage = cx.expect_mapped_symbol(
-            value,
+            Some(value),
             name_value.value_span,
             [
                 (sym::available_externally, Linkage::AvailableExternally),

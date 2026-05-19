@@ -475,16 +475,17 @@ impl<'f, 'sess: 'f> AcceptContext<'f, 'sess> {
         Some(single)
     }
 
-    pub(crate) fn expect_mapped_symbol<T: Copy, const N: usize>(
+    pub(crate) fn expect_mapped_symbol<T, const N: usize>(
         &mut self,
-        arg: Symbol,
+        arg: Option<Symbol>,
         span: Span,
         mapping: [(Symbol, T); N],
     ) -> Option<T> {
-        match mapping.iter().find(|&&(symbol, _)| symbol == arg) {
-            Some(&(_, result)) => Some(result),
+        let symbols = mapping.each_ref().map(|&(symbol, _)| symbol);
+        match arg.and_then(|s| mapping.into_iter().find(|&(symbol, _)| symbol == s)) {
+            Some((_, result)) => Some(result),
             None => {
-                self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
+                self.adcx().expected_specific_argument(span, &symbols);
                 None
             }
         }
@@ -492,15 +493,15 @@ impl<'f, 'sess: 'f> AcceptContext<'f, 'sess> {
 
     pub(crate) fn expect_mapped_symbol_strings<T: Copy, const N: usize>(
         &mut self,
-        arg: Symbol,
+        arg: Option<Symbol>,
         span: Span,
         mapping: [(Symbol, T); N],
     ) -> Option<T> {
-        match mapping.iter().find(|&&(symbol, _)| symbol == arg) {
-            Some(&(_, result)) => Some(result),
+        let symbols = mapping.each_ref().map(|&(symbol, _)| symbol);
+        match arg.and_then(|s| mapping.into_iter().find(|&(symbol, _)| symbol == s)) {
+            Some((_, result)) => Some(result),
             None => {
-                self.adcx()
-                    .expected_specific_argument_strings(span, &mapping.map(|(symbol, _)| symbol));
+                self.adcx().expected_specific_argument_strings(span, &symbols);
                 None
             }
         }
@@ -513,12 +514,8 @@ impl<'f, 'sess: 'f> AcceptContext<'f, 'sess> {
         mapping: [(Symbol, T); N],
     ) -> Option<T> {
         let single = self.expect_single_element_list(arg, span)?;
-        let Some(symbol) = single.meta_item().and_then(|i| i.path().word_sym()) else {
-            self.adcx().expected_specific_argument(span, &mapping.map(|(symbol, _)| symbol));
-            return None;
-        };
-
-        self.expect_mapped_symbol(symbol, single.span(), mapping)
+        let maybe_symbol = single.meta_item().and_then(|i| i.path().word_sym());
+        self.expect_mapped_symbol(maybe_symbol, single.span(), mapping)
     }
 
     /// Asserts that an [`ArgParser`] is a list and returns it, or emits an error and returns

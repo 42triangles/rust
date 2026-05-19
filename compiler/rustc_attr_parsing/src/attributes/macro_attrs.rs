@@ -182,7 +182,7 @@ impl SingleAttributeParser for CollapseDebugInfoParser {
         let path = mi.path().word_sym();
 
         let info = cx.expect_mapped_symbol(
-            path?,
+            Some(path?),
             mi.span(),
             [
                 (sym::yes, CollapseMacroDebuginfo::Yes),
