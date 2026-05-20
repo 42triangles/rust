@@ -106,26 +106,18 @@ impl CombineAttributeParser for RustcDumpLayoutParser {
                 cx.adcx().expected_identifier(arg.span());
                 return vec![];
             };
-            // TODO
-            let kind = match ident.name {
-                sym::align => RustcDumpLayoutKind::Align,
-                sym::backend_repr => RustcDumpLayoutKind::BackendRepr,
-                sym::debug => RustcDumpLayoutKind::Debug,
-                sym::homogeneous_aggregate => RustcDumpLayoutKind::HomogenousAggregate,
-                sym::size => RustcDumpLayoutKind::Size,
-                _ => {
-                    cx.adcx().expected_specific_argument(
-                        ident.span,
-                        &[
-                            sym::align,
-                            sym::backend_repr,
-                            sym::debug,
-                            sym::homogeneous_aggregate,
-                            sym::size,
-                        ],
-                    );
-                    continue;
-                }
+            let Some(kind) = cx.expect_mapped_symbol(
+                Some(ident.name),
+                ident.span,
+                [
+                    (sym::align, RustcDumpLayoutKind::Align),
+                    (sym::backend_repr, RustcDumpLayoutKind::BackendRepr),
+                    (sym::debug, RustcDumpLayoutKind::Debug),
+                    (sym::homogeneous_aggregate, RustcDumpLayoutKind::HomogenousAggregate),
+                    (sym::size, RustcDumpLayoutKind::Size),
+                ],
+            ) else {
+                continue;
             };
             result.push(kind);
         }

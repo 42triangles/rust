@@ -18,7 +18,6 @@ impl SingleAttributeParser for InstructionSetParser {
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
         const POSSIBLE_SYMBOLS: &[Symbol] = &[sym::arm_a32, sym::arm_t32];
-        const POSSIBLE_ARM_SYMBOLS: &[Symbol] = &[sym::a32, sym::t32];
         let maybe_meta_item = cx.expect_single_element_list(args, cx.attr_span)?;
 
         let Some(meta_item) = maybe_meta_item.meta_item() else {
@@ -48,16 +47,15 @@ impl SingleAttributeParser for InstructionSetParser {
                     });
                     return None;
                 }
-                // TODO
-                match instruction_set.name {
-                    sym::a32 => InstructionSetAttr::ArmA32,
-                    sym::t32 => InstructionSetAttr::ArmT32,
-                    _ => {
-                        cx.adcx()
-                            .expected_specific_argument(instruction_set.span, POSSIBLE_ARM_SYMBOLS);
-                        return None;
-                    }
-                }
+
+                cx.expect_mapped_symbol(
+                    Some(instruction_set.name),
+                    instruction_set.span,
+                    [
+                        (sym::a32, InstructionSetAttr::ArmA32),
+                        (sym::t32, InstructionSetAttr::ArmT32),
+                    ],
+                )?
             }
             _ => {
                 cx.adcx().expected_specific_argument(architecture.span, POSSIBLE_SYMBOLS);

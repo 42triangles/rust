@@ -106,8 +106,7 @@ impl CombineAttributeParser for LinkParser {
                 continue;
             };
 
-            // TODO
-            let cont = match item.path().word().map(|ident| ident.name) {
+            let cont = match item.path().word_sym() {
                 Some(sym::name) => Self::parse_link_name(item, &mut name, cx),
                 Some(sym::kind) => Self::parse_link_kind(item, &mut kind, cx, sess, features),
                 Some(sym::modifiers) => Self::parse_link_modifiers(item, &mut modifiers, cx),
@@ -442,18 +441,16 @@ impl LinkParser {
             return true;
         }
 
-        // TODO
-        let link_import_name_type = match link_import_name_type {
-            sym::decorated => PeImportNameType::Decorated,
-            sym::noprefix => PeImportNameType::NoPrefix,
-            sym::undecorated => PeImportNameType::Undecorated,
-            _ => {
-                cx.adcx().expected_specific_argument_strings(
-                    item.span(),
-                    &[sym::decorated, sym::noprefix, sym::undecorated],
-                );
-                return true;
-            }
+        let Some(link_import_name_type) = cx.expect_mapped_symbol_strings(
+            Some(link_import_name_type),
+            item.span(),
+            [
+                (sym::decorated, PeImportNameType::Decorated),
+                (sym::noprefix, PeImportNameType::NoPrefix),
+                (sym::undecorated, PeImportNameType::Undecorated),
+            ],
+        ) else {
+            return true;
         };
         *import_name_type = Some((link_import_name_type, item.span()));
         true

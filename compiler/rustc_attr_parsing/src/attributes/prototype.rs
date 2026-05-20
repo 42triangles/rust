@@ -34,18 +34,15 @@ impl SingleAttributeParser for CustomMirParser {
                 break;
             };
 
-            // TODO
-            match path.name {
-                sym::dialect => {
-                    extract_value(cx, sym::dialect, arg, item.span(), &mut dialect, &mut failed)
+            match cx.expect_mapped_symbol(
+                Some(path.name),
+                item.span(),
+                [(sym::dialect, &mut dialect), (sym::phase, &mut phase)],
+            ) {
+                Some(out_val) => {
+                    extract_value(cx, path.name, arg, item.span(), out_val, &mut failed)
                 }
-                sym::phase => {
-                    extract_value(cx, sym::phase, arg, item.span(), &mut phase, &mut failed)
-                }
-                _ => {
-                    cx.adcx().expected_specific_argument(item.span(), &[sym::dialect, sym::phase]);
-                    failed = true;
-                }
+                None => failed = true,
             }
         }
 
@@ -90,17 +87,17 @@ fn parse_dialect(
 ) -> Option<(MirDialect, Span)> {
     let (dialect, span) = dialect?;
 
-    // TODO
-    let dialect = match dialect {
-        sym::analysis => MirDialect::Analysis,
-        sym::built => MirDialect::Built,
-        sym::runtime => MirDialect::Runtime,
-
-        _ => {
-            cx.adcx().expected_specific_argument(span, &[sym::analysis, sym::built, sym::runtime]);
-            *failed = true;
-            return None;
-        }
+    let Some(dialect) = cx.expect_mapped_symbol(
+        Some(dialect),
+        span,
+        [
+            (sym::analysis, MirDialect::Analysis),
+            (sym::built, MirDialect::Built),
+            (sym::runtime, MirDialect::Runtime),
+        ],
+    ) else {
+        *failed = true;
+        return None;
     };
 
     Some((dialect, span))
@@ -113,20 +110,17 @@ fn parse_phase(
 ) -> Option<(MirPhase, Span)> {
     let (phase, span) = phase?;
 
-    // TODO
-    let phase = match phase {
-        sym::initial => MirPhase::Initial,
-        sym::post_cleanup => MirPhase::PostCleanup,
-        sym::optimized => MirPhase::Optimized,
-
-        _ => {
-            cx.adcx().expected_specific_argument(
-                span,
-                &[sym::initial, sym::post_cleanup, sym::optimized],
-            );
-            *failed = true;
-            return None;
-        }
+    let Some(phase) = cx.expect_mapped_symbol(
+        Some(phase),
+        span,
+        [
+            (sym::initial, MirPhase::Initial),
+            (sym::post_cleanup, MirPhase::PostCleanup),
+            (sym::optimized, MirPhase::Optimized),
+        ],
+    ) else {
+        *failed = true;
+        return None;
     };
 
     Some((phase, span))

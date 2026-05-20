@@ -182,22 +182,15 @@ fn parse_cgu_fields(
             continue;
         };
 
-        // TODO
-        let res = match ident.name {
-            sym::cfg => &mut cfg,
-            sym::module => &mut module,
-            sym::kind if accepts_kind => &mut kind,
-            _ => {
-                cx.adcx().expected_specific_argument(
-                    ident.span,
-                    if accepts_kind {
-                        &[sym::cfg, sym::module, sym::kind]
-                    } else {
-                        &[sym::cfg, sym::module]
-                    },
-                );
-                continue;
-            }
+        let mapping = [(sym::cfg, &mut cfg), (sym::module, &mut module), (sym::kind, &mut kind)];
+        let res = if accepts_kind {
+            cx.expect_mapped_symbol(Some(ident.name), ident.span, mapping)
+        } else {
+            let [mapping_without_kind @ .., _] = mapping;
+            cx.expect_mapped_symbol(Some(ident.name), ident.span, mapping_without_kind)
+        };
+        let Some(res) = res else {
+            continue;
         };
 
         let str = cx.expect_string_literal(arg)?;
@@ -219,20 +212,16 @@ fn parse_cgu_fields(
         return None;
     };
     let kind = if let Some((kind, span)) = kind {
-        // TODO
-        Some(match kind {
-            sym::no => CguKind::No,
-            sym::pre_dash_lto => CguKind::PreDashLto,
-            sym::post_dash_lto => CguKind::PostDashLto,
-            sym::any => CguKind::Any,
-            _ => {
-                cx.adcx().expected_specific_argument_strings(
-                    span,
-                    &[sym::no, sym::pre_dash_lto, sym::post_dash_lto, sym::any],
-                );
-                return None;
-            }
-        })
+        Some(cx.expect_mapped_symbol_strings(
+            Some(kind),
+            span,
+            [
+                (sym::no, CguKind::No),
+                (sym::pre_dash_lto, CguKind::PreDashLto),
+                (sym::post_dash_lto, CguKind::PostDashLto),
+                (sym::any, CguKind::Any),
+            ],
+        )?)
     } else {
         // return None so that an unwrap for the attributes that need it is ok.
         if accepts_kind {
@@ -367,17 +356,15 @@ impl SingleAttributeParser for RustcNeverTypeOptionsParser {
                 continue;
             };
 
-            // TODO
-            let res = match ident.name {
-                sym::fallback => &mut fallback,
-                sym::diverging_block_default => &mut diverging_block_default,
-                _ => {
-                    cx.adcx().expected_specific_argument(
-                        ident.span,
-                        &[sym::fallback, sym::diverging_block_default],
-                    );
-                    continue;
-                }
+            let Some(res) = cx.expect_mapped_symbol(
+                Some(ident.name),
+                ident.span,
+                [
+                    (sym::fallback, &mut fallback),
+                    (sym::diverging_block_default, &mut diverging_block_default),
+                ],
+            ) else {
+                continue;
             };
 
             let field = cx.expect_string_literal(arg)?;
@@ -390,28 +377,29 @@ impl SingleAttributeParser for RustcNeverTypeOptionsParser {
             *res = Some(Ident { name: field, span: arg.value_span });
         }
 
-        // TODO
         let fallback = match fallback {
             None => None,
-            Some(Ident { name: sym::unit, .. }) => Some(DivergingFallbackBehavior::ToUnit),
-            Some(Ident { name: sym::never, .. }) => Some(DivergingFallbackBehavior::ToNever),
-            Some(Ident { name: sym::no, .. }) => Some(DivergingFallbackBehavior::NoFallback),
-            Some(Ident { span, .. }) => {
-                cx.adcx()
-                    .expected_specific_argument_strings(span, &[sym::unit, sym::never, sym::no]);
-                return None;
-            }
+            Some(ident) => Some(cx.expect_mapped_symbol_strings(
+                Some(ident.name),
+                ident.span,
+                [
+                    (sym::unit, DivergingFallbackBehavior::ToUnit),
+                    (sym::never, DivergingFallbackBehavior::ToNever),
+                    (sym::no, DivergingFallbackBehavior::NoFallback),
+                ],
+            )?),
         };
 
-        // TODO
         let diverging_block_default = match diverging_block_default {
             None => None,
-            Some(Ident { name: sym::unit, .. }) => Some(DivergingBlockBehavior::Unit),
-            Some(Ident { name: sym::never, .. }) => Some(DivergingBlockBehavior::Never),
-            Some(Ident { span, .. }) => {
-                cx.adcx().expected_specific_argument_strings(span, &[sym::unit, sym::no]);
-                return None;
-            }
+            Some(ident) => Some(cx.expect_mapped_symbol_strings(
+                Some(ident.name),
+                ident.span,
+                [
+                    (sym::unit, DivergingBlockBehavior::Unit),
+                    (sym::never, DivergingBlockBehavior::Never),
+                ],
+            )?),
         };
 
         Some(AttributeKind::RustcNeverTypeOptions { fallback, diverging_block_default })
@@ -656,17 +644,16 @@ impl CombineAttributeParser for RustcMirParser {
                                 cx.adcx().expected_identifier(nv.value_span);
                                 return None;
                             };
-                            // TODO
-                            match format.name {
-                                sym::two_phase => Some(RustcMirKind::BorrowckGraphvizFormat {
-                                    format: BorrowckGraphvizFormatKind::TwoPhase,
-                                }),
-                                _ => {
-                                    cx.adcx()
-                                        .expected_specific_argument(format.span, &[sym::two_phase]);
-                                    None
-                                }
-                            }
+                            cx.expect_mapped_symbol(
+                                Some(format.name),
+                                format.span,
+                                [(
+                                    sym::two_phase,
+                                    RustcMirKind::BorrowckGraphvizFormat {
+                                        format: BorrowckGraphvizFormatKind::TwoPhase,
+                                    },
+                                )],
+                            )
                         }
                         _ => None,
                     }

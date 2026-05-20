@@ -39,19 +39,13 @@ impl SingleAttributeParser for InlineParser {
             ArgParser::List(list) => {
                 let l = cx.expect_single(list)?;
 
-                // TODO
-                match l.meta_item().and_then(|i| i.path().word_sym()) {
-                    Some(sym::always) => {
-                        Some(AttributeKind::Inline(InlineAttr::Always, cx.attr_span))
-                    }
-                    Some(sym::never) => {
-                        Some(AttributeKind::Inline(InlineAttr::Never, cx.attr_span))
-                    }
-                    _ => {
-                        cx.adcx().expected_specific_argument(l.span(), &[sym::always, sym::never]);
-                        return None;
-                    }
-                }
+                let inline_attr = cx.expect_mapped_symbol(
+                    l.meta_item().and_then(|i| i.path().word_sym()),
+                    l.span(),
+                    [(sym::always, InlineAttr::Always), (sym::never, InlineAttr::Never)],
+                )?;
+
+                Some(AttributeKind::Inline(inline_attr, cx.attr_span))
             }
             ArgParser::NameValue(_) => {
                 cx.adcx().warn_ill_formed_attribute_input(ILL_FORMED_ATTRIBUTE_INPUT);
