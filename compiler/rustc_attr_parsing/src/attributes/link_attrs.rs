@@ -106,7 +106,7 @@ impl CombineAttributeParser for LinkParser {
                 continue;
             };
 
-            let cont = match item.path().word_sym() {
+            let cont = match item.path().word().map(|ident| ident.name) {
                 Some(sym::name) => Self::parse_link_name(item, &mut name, cx),
                 Some(sym::kind) => Self::parse_link_kind(item, &mut kind, cx, sess, features),
                 Some(sym::modifiers) => Self::parse_link_modifiers(item, &mut modifiers, cx),
