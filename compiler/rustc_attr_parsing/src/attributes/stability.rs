@@ -389,7 +389,7 @@ pub(crate) fn parse_unstability(
                 (sym::old_name, &mut old_name),
             ],
         )?;
-        let word = word.expect("matched above");
+        let word = word.unwrap();
 
         insert_value_into_option_or_error(cx, &param, item, word)?;
         if word.name == sym::issue {

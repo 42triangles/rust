@@ -37,7 +37,7 @@ impl SingleAttributeParser for RustcSkipDuringMethodDispatchParser {
             ) else {
                 continue;
             };
-            let key = word.expect("checked above").name;
+            let key = word.unwrap().name;
             if mem::replace(skip, true) {
                 cx.adcx().duplicate_key(arg.span(), key);
             }
