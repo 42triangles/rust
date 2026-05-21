@@ -563,7 +563,7 @@ impl SingleAttributeParser for SanitizeParser {
             };
 
             if ident.name == sym::realtime {
-                // Returns `None` in the error case
+                // Set to `None` in the error case
                 rtsan = cx.expect_mapped_symbol_strings(
                     value.value_as_str(),
                     value.value_span,
@@ -677,7 +677,7 @@ impl SingleAttributeParser for PatchableFunctionEntryParser {
                 continue;
             };
 
-            // Duplicate prefixes are not allowed
+            // Duplicate prefixes/entries are not allowed
             if attrib_to_write.is_some() {
                 errored = true;
                 cx.adcx().duplicate_key(ident.span, ident.name);
