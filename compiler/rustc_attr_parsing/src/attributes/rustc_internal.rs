@@ -182,12 +182,18 @@ fn parse_cgu_fields(
             continue;
         };
 
-        let mapping = [(sym::cfg, &mut cfg), (sym::module, &mut module), (sym::kind, &mut kind)];
         let res = if accepts_kind {
-            cx.expect_mapped_symbol(Some(ident.name), ident.span, mapping)
+            cx.expect_mapped_symbol(
+                Some(ident.name),
+                ident.span,
+                [(sym::cfg, &mut cfg), (sym::module, &mut module), (sym::kind, &mut kind)],
+            )
         } else {
-            let [mapping_without_kind @ .., _] = mapping;
-            cx.expect_mapped_symbol(Some(ident.name), ident.span, mapping_without_kind)
+            cx.expect_mapped_symbol(
+                Some(ident.name),
+                ident.span,
+                [(sym::cfg, &mut cfg), (sym::module, &mut module)],
+            )
         };
         let Some(res) = res else {
             continue;
