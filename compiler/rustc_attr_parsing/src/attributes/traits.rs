@@ -29,15 +29,15 @@ impl SingleAttributeParser for RustcSkipDuringMethodDispatchParser {
             };
             let _ = cx.expect_no_args(arg.args());
             let path = arg.path();
-            let word = path.word();
+            let sym = path.word_sym();
             let Some(skip) = cx.expect_mapped_symbol(
-                word.map(|ident| ident.name),
+                sym,
                 path.span(),
                 [(sym::array, &mut array), (sym::boxed_slice, &mut boxed_slice)],
             ) else {
                 continue;
             };
-            let key = word.unwrap().name;
+            let key = sym.unwrap();
             if mem::replace(skip, true) {
                 cx.adcx().duplicate_key(arg.span(), key);
             }
