@@ -375,13 +375,8 @@ impl AttributeParser for UsedParser {
                         return;
                     };
                     if !cx.features().used_with_arg() {
-                        feature_err(
-                            &cx.sess(),
-                            maybe_symbol.expect("something must have matched"),
-                            cx.attr_span,
-                            unstable_msg,
-                        )
-                        .emit();
+                        feature_err(&cx.sess(), sym::used_with_arg, cx.attr_span, unstable_msg)
+                            .emit();
                     }
                     used_by
                 }
