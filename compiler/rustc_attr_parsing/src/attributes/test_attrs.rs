@@ -128,15 +128,11 @@ impl SingleAttributeParser for RustcAbiParser {
             return None;
         };
 
-        // TODO
-        let kind: RustcAbiAttrKind = match arg.path().word_sym() {
-            Some(sym::assert_eq) => RustcAbiAttrKind::AssertEq,
-            Some(sym::debug) => RustcAbiAttrKind::Debug,
-            None | Some(_) => {
-                fail_incorrect_argument(arg.span());
-                return None;
-            }
-        };
+        let kind: RustcAbiAttrKind = cx.expect_mapped_symbol(
+            arg.path().word_sym(),
+            arg.span(),
+            [(sym::assert_eq, RustcAbiAttrKind::AssertEq), (sym::debug, RustcAbiAttrKind::Debug)],
+        )?;
 
         Some(AttributeKind::RustcAbi { attr_span: cx.attr_span, kind })
     }

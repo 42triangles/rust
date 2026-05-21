@@ -317,19 +317,12 @@ pub(crate) fn parse_stability(
         };
 
         let word = param.path().word();
-        // TODO
-        match word.map(|i| i.name) {
-            Some(sym::feature) => {
-                insert_value_into_option_or_error(cx, &param, &mut feature, word.unwrap())?
-            }
-            Some(sym::since) => {
-                insert_value_into_option_or_error(cx, &param, &mut since, word.unwrap())?
-            }
-            _ => {
-                cx.adcx().expected_specific_argument(param_span, &[sym::feature, sym::since]);
-                return None;
-            }
-        }
+        let item = cx.expect_mapped_symbol(
+            word.map(|ident| ident.name),
+            param_span,
+            [(sym::feature, &mut feature), (sym::since, &mut since)],
+        )?;
+        insert_value_into_option_or_error(cx, &param, item, word.unwrap())?
     }
 
     let feature = match feature {
@@ -385,51 +378,40 @@ pub(crate) fn parse_unstability(
         };
 
         let word = param.path().word();
-        // TODO; special case `sym::issue` as a cleanup thing after
-        match word.map(|i| i.name) {
-            Some(sym::feature) => {
-                insert_value_into_option_or_error(cx, &param, &mut feature, word.unwrap())?
-            }
-            Some(sym::reason) => {
-                insert_value_into_option_or_error(cx, &param, &mut reason, word.unwrap())?
-            }
-            Some(sym::issue) => {
-                insert_value_into_option_or_error(cx, &param, &mut issue, word.unwrap())?;
+        let item = cx.expect_mapped_symbol(
+            word.map(|i| i.name),
+            param.span(),
+            [
+                (sym::feature, &mut feature),
+                (sym::reason, &mut reason),
+                (sym::issue, &mut issue),
+                (sym::implied_by, &mut implied_by),
+                (sym::old_name, &mut old_name),
+            ],
+        )?;
+        let word = word.expect("matched above");
 
-                // These unwraps are safe because `insert_value_into_option_or_error` ensures the meta item
-                // is a name/value pair string literal.
-                issue_num = match issue.unwrap().as_str() {
-                    "none" => None,
-                    issue_str => match issue_str.parse::<NonZero<u32>>() {
-                        Ok(num) => Some(num),
-                        Err(err) => {
-                            cx.emit_err(
-                                session_diagnostics::InvalidIssueString {
-                                    span: param.span(),
-                                    cause: session_diagnostics::InvalidIssueStringCause::from_int_error_kind(
-                                        param.args().as_name_value().unwrap().value_span,
-                                        err.kind(),
-                                    ),
-                                },
-                            );
-                            return None;
-                        }
-                    },
-                };
-            }
-            Some(sym::implied_by) => {
-                insert_value_into_option_or_error(cx, &param, &mut implied_by, word.unwrap())?
-            }
-            Some(sym::old_name) => {
-                insert_value_into_option_or_error(cx, &param, &mut old_name, word.unwrap())?
-            }
-            _ => {
-                cx.adcx().expected_specific_argument(
-                    param.span(),
-                    &[sym::feature, sym::reason, sym::issue, sym::implied_by, sym::old_name],
-                );
-                return None;
-            }
+        insert_value_into_option_or_error(cx, &param, item, word)?;
+        if word.name == sym::issue {
+            // These unwraps are safe because `insert_value_into_option_or_error` ensures the meta item
+            // is a name/value pair string literal.
+            issue_num = match issue.unwrap().as_str() {
+                "none" => None,
+                issue_str => match issue_str.parse::<NonZero<u32>>() {
+                    Ok(num) => Some(num),
+                    Err(err) => {
+                        cx.emit_err(session_diagnostics::InvalidIssueString {
+                            span: param.span(),
+                            cause:
+                                session_diagnostics::InvalidIssueStringCause::from_int_error_kind(
+                                    param.args().as_name_value().unwrap().value_span,
+                                    err.kind(),
+                                ),
+                        });
+                        return None;
+                    }
+                },
+            };
         }
     }
 
@@ -508,20 +490,17 @@ impl CombineAttributeParser for UnstableRemovedParser {
                 );
                 return None;
             };
-            // TODO
-            match word.name {
-                sym::feature => insert_value_into_option_or_error(cx, &param, &mut feature, word)?,
-                sym::since => insert_value_into_option_or_error(cx, &param, &mut since, word)?,
-                sym::reason => insert_value_into_option_or_error(cx, &param, &mut reason, word)?,
-                sym::link => insert_value_into_option_or_error(cx, &param, &mut link, word)?,
-                _ => {
-                    cx.adcx().expected_specific_argument(
-                        param.span(),
-                        &[sym::feature, sym::reason, sym::link, sym::since],
-                    );
-                    return None;
-                }
-            }
+            let item = cx.expect_mapped_symbol(
+                Some(word.name),
+                param.span(),
+                [
+                    (sym::feature, &mut feature),
+                    (sym::since, &mut since),
+                    (sym::reason, &mut reason),
+                    (sym::link, &mut link),
+                ],
+            )?;
+            insert_value_into_option_or_error(cx, &param, item, word)?;
         }
 
         // Check all the arguments are present

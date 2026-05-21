@@ -15,20 +15,15 @@ impl SingleAttributeParser for RustcMacroTransparencyParser {
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
         let nv = cx.expect_name_value(args, cx.attr_span, None)?;
-        // TODO
-        match nv.value_as_str() {
-            Some(sym::transparent) => Some(Transparency::Transparent),
-            Some(sym::semiopaque) => Some(Transparency::SemiOpaque),
-            Some(sym::opaque) => Some(Transparency::Opaque),
-            Some(_) => {
-                cx.adcx().expected_specific_argument_strings(
-                    nv.value_span,
-                    &[sym::transparent, sym::semiopaque, sym::opaque],
-                );
-                None
-            }
-            None => None,
-        }
+        cx.expect_mapped_symbol_strings(
+            nv.value_as_str(),
+            nv.value_span,
+            [
+                (sym::transparent, Transparency::Transparent),
+                (sym::semiopaque, Transparency::SemiOpaque),
+                (sym::opaque, Transparency::Opaque),
+            ],
+        )
         .map(AttributeKind::RustcMacroTransparency)
     }
 }
