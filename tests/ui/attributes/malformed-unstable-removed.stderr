@@ -18,7 +18,7 @@ error[E0539]: malformed `unstable_removed` attribute input
 LL | #![unstable_removed(invalid = "old_feature")]
    | ^^^^^^^^^^^^^^^^^^^^-----------------------^^
    |                     |
-   |                     valid arguments are `feature`, `reason`, `link` or `since`
+   |                     valid arguments are `feature`, `since`, `reason` or `link`
    |
 help: must be of the form
    |
