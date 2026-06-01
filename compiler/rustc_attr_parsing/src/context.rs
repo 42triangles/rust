@@ -1037,23 +1037,6 @@ impl<'a, 'f, 'sess: 'f> AttributeDiagnosticContext<'a, 'f, 'sess> {
         )
     }
 
-    /// Produces an error along the lines of `expected one of [foo, meow] as an argument`.
-    /// i.e. slightly different wording to [`expected_specific_argument`](Self::expected_specific_argument).
-    pub(crate) fn expected_specific_argument_and_list(
-        &mut self,
-        span: Span,
-        possibilities: &[Symbol],
-    ) -> ErrorGuaranteed {
-        self.emit_parse_error(
-            span,
-            AttributeParseErrorReason::ExpectedSpecificArgument {
-                possibilities,
-                strings: false,
-                list: true,
-            },
-        )
-    }
-
     /// produces an error along the lines of `expected one of ["foo", "meow"]`
     pub(crate) fn expected_specific_argument_strings(
         &mut self,

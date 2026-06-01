@@ -112,25 +112,9 @@ impl SingleAttributeParser for RustcAbiParser {
     ]);
 
     fn convert(cx: &mut AcceptContext<'_, '_>, args: &ArgParser) -> Option<AttributeKind> {
-        let Some(args) = args.as_list() else {
-            let attr_span = cx.attr_span;
-            cx.adcx().expected_specific_argument_and_list(attr_span, &[sym::assert_eq, sym::debug]);
-            return None;
-        };
-
-        let arg = cx.expect_single(args)?;
-
-        let mut fail_incorrect_argument =
-            |span| cx.adcx().expected_specific_argument(span, &[sym::assert_eq, sym::debug]);
-
-        let Some(arg) = arg.meta_item() else {
-            fail_incorrect_argument(args.span);
-            return None;
-        };
-
-        let kind: RustcAbiAttrKind = cx.expect_mapped_symbol(
-            arg.path().word_sym(),
-            arg.span(),
+        let kind: RustcAbiAttrKind = cx.expect_single_mapped_symbol_in_list(
+            args,
+            cx.attr_span,
             [(sym::assert_eq, RustcAbiAttrKind::AssertEq), (sym::debug, RustcAbiAttrKind::Debug)],
         )?;
 
